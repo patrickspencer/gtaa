@@ -115,8 +115,7 @@ def run_backtest(
         "end": equity.index[-1].strftime("%Y-%m"),
         "months": len(port),
         **metrics.summarise(port, cash_rets),
-        "benchmark_cagr": metrics.cagr(bench_rets),
-        "benchmark_max_drawdown": metrics.max_drawdown(bench_rets),
         "avg_cash_weight": float(w["CASH"].mean()),
+        "equal_weight": metrics.summarise(bench_rets, cash_rets),
     }
     return BacktestResult(top_n, equity, port, w, benchmark, summary)

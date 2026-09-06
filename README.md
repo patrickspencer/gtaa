@@ -1,13 +1,13 @@
 # GTAA AGG 6 / AGG 3
 
 Current signals and a monthly backtest for Meb Faber's *aggressive* Global
-Tactical Asset Allocation — the top-6 and top-3 versions of GTAA 13 — using
+Tactical Asset Allocation (the top-6 and top-3 versions of GTAA 13), using
 plain ETFs, a DuckDB file, and under 600 lines of Python.
 
 ```
 $ gtaa signal --top 6
 
-GTAA AGG 6 — decided at 2026-08-31 (complete)
+GTAA AGG 6, decided at 2026-08-31 (complete)
 
 rank  symbol asset class                     score  vs 10mo SMA   weight
    1  DBC    Commodities                    20.69%  above          16.7%
@@ -59,8 +59,8 @@ taxes, commissions and slippage.
 ## The 13 asset classes and their ETF proxies
 
 Faber's tables are built from long-history indexes (S&P 500, MSCI EAFE,
-GSCI, NAREIT, …). To hold the strategy — and to backtest it on prices you
-can actually trade — each asset class needs an ETF. The choices below favour
+GSCI, NAREIT, and so on). To hold the strategy, and to backtest it on
+prices you can actually trade, each asset class needs an ETF. The choices below favour
 **low cost, liquidity, and the longest available history**, in that order.
 `gtaa/universe.py` is the single source of truth.
 
@@ -79,7 +79,7 @@ can actually trade — each asset class needs an ETF. The choices below favour
 | 11 | Commodities | **DBC** | Broad, diversified commodity futures. The paper uses the GSCI; the closest fund (GSG) is energy-heavy and thinly traded, so DBC's diversified basket is used. | 2006-03 |
 | 12 | Gold | **GLD** | The original and largest physically-backed gold fund. IAU is cheaper but younger; either works. | 2004-12 |
 | 13 | Real estate | **VNQ** | Broad US REITs, the paper's NAREIT series. | 2004-10 |
-| — | Cash | **BIL** | 1–3 month T-bills, the paper's 90-day T-bill cash return. Nothing else in the universe has any bearing on it. | 2007-06 |
+| | Cash | **BIL** | 1–3 month T-bills, the paper's 90-day T-bill cash return. Nothing else in the universe has any bearing on it. | 2007-06 |
 
 Adjusted closes (dividends and splits) from Tiingo make each series a
 total-return series, matching the paper's data.
@@ -109,8 +109,8 @@ For a longer view, [`extended/`](extended/) splices a mutual fund in front
 of each ETF and runs the same engine from **August 2000**, through the
 2000–02 and 2008 bear markets. Its README lists every proxy, the date it
 hands over to the ETF, and why it was chosen. Those results are less
-reliable than the 2014 ones — three of the sleeves have no faithful
-substitute before their ETF existed — and are presented with that caveat.
+reliable than the 2014 ones, since three of the sleeves have no faithful
+substitute before their ETF existed, and are presented with that caveat.
 
 ## Results
 
@@ -119,43 +119,66 @@ substitute before their ETF existed — and are presented with that caveat.
 ```
 GTAA AGG 6: 2014-04 to 2026-08 (148 months, month-end to month-end)
 
-                            strategy  equal-weight
-CAGR                           8.31%         6.93%
-Max drawdown                 -12.33%       -19.68%
-Volatility (annual)            9.22%
-Sharpe (vs T-bills)             0.72
-Best / worst month             8.17%        -7.09%
-Average cash weight            10.8%
+Strategy (top 6 by momentum, trend filter, rest in cash)
+  CAGR                      8.31%
+  Max drawdown            -12.33%
+  Volatility (annual)       9.22%
+  Sharpe (vs T-bills)        0.72
+  Best month                8.17%
+  Worst month              -7.09%
+  Average cash weight       10.8%
+
+Equal-weight (all 13 held at once, 1/13 each, rebalanced monthly)
+  CAGR                      6.93%
+  Max drawdown            -19.68%
+  Volatility (annual)       9.98%
+  Sharpe (vs T-bills)        0.54
+  Best month                7.83%
+  Worst month             -10.97%
 
 Calendar years:
-  2014     8.57%   equal-weight    1.52%  (from May)
-  2015    -8.11%   equal-weight   -4.48%
-  2016     7.47%   equal-weight    9.97%
-  2017    18.84%   equal-weight   14.50%
-  2018    -1.72%   equal-weight   -6.08%
-  2019     8.03%   equal-weight   19.58%
-  2020    11.92%   equal-weight   12.01%
-  2021    22.13%   equal-weight   11.47%
-  2022    -6.95%   equal-weight  -13.38%
-  2023    -0.71%   equal-weight    9.46%
-  2024    11.51%   equal-weight    8.27%
-  2025    20.57%   equal-weight   16.33%
-  2026    16.51%   equal-weight   11.81%  (to Aug)
+         strategy   equal-weight
+  2014      8.57%          1.52%  (from May)
+  2015     -8.11%         -4.48%
+  2016      7.47%          9.97%
+  2017     18.84%         14.50%
+  2018     -1.72%         -6.08%
+  2019      8.03%         19.58%
+  2020     11.92%         12.01%
+  2021     22.13%         11.47%
+  2022     -6.95%        -13.38%
+  2023     -0.71%          9.46%
+  2024     11.51%          8.27%
+  2025     20.57%         16.33%
+  2026     16.51%         11.81%  (to Aug)
 ```
 
 ```
 GTAA AGG 3: 2014-04 to 2026-08 (148 months, month-end to month-end)
 
-                            strategy  equal-weight
-CAGR                           7.11%         6.93%
-Max drawdown                 -15.20%       -19.68%
-Volatility (annual)           11.06%
-Sharpe (vs T-bills)             0.51
+Strategy (top 3 by momentum, trend filter, rest in cash)
+  CAGR                      7.11%
+  Max drawdown            -15.20%
+  Volatility (annual)      11.06%
+  Sharpe (vs T-bills)        0.51
+  Best month                7.76%
+  Worst month              -8.88%
+  Average cash weight        5.9%
+
+Equal-weight (all 13 held at once, 1/13 each, rebalanced monthly)
+  CAGR                      6.93%
+  Max drawdown            -19.68%
+  Volatility (annual)       9.98%
+  Sharpe (vs T-bills)        0.54
+  Best month                7.83%
+  Worst month             -10.97%
 ```
 
-"Equal-weight" is a buy-and-hold portfolio of all 13 ETFs at 1/13 each,
-rebalanced monthly — the same universe with no selection and no trend
-filter. It is the honest benchmark for the rules, not a stock index.
+"Equal-weight" means holding all 13 ETFs at the same time, 1/13 in each,
+rebalanced back to that every month: the same universe with no ranking,
+no trend filter and never any cash. It is the honest benchmark for the
+rules, not a stock index, because the only difference between the two
+tables is the rules.
 
 Twelve years is a short sample, most of it a bull market in US equities
 with one sharp drawdown (2020) and one bear market in both stocks and bonds

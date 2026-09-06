@@ -40,7 +40,7 @@ def cmd_signal(args):
     rows, cash, month = allocation(signals, args.top, args.month)
     latest = signals[signals["month"] == month].iloc[0]
     status = "complete" if latest["month_complete"] else "provisional (month not finished)"
-    print(f"GTAA AGG {args.top} — decided at {latest['month_end'].date()} ({status})\n")
+    print(f"GTAA AGG {args.top}, decided at {latest['month_end'].date()} ({status})\n")
     print(f"{'rank':>4}  {'symbol':6s} {'asset class':28s} {'score':>8s}  {'vs 10mo SMA':12s} {'weight':>7s}")
     for _, r in rows.iterrows():
         trend = "above" if r["above_sma"] else "below -> cash"
@@ -59,28 +59,36 @@ def cmd_backtest(args):
     con = data.connect(args.db)
     result = run_backtest(con, args.top, start=args.start, end=args.end)
     s = result.summary
+    n = len(result.weights.columns) - 1
     print(f"GTAA AGG {args.top}: {s['start']} to {s['end']} ({s['months']} months, month-end to month-end)\n")
-    print(f"{'':24s}{'strategy':>12s}{'equal-weight':>14s}")
-    print(f"{'CAGR':24s}{s['cagr']:>12.2%}{s['benchmark_cagr']:>14.2%}")
-    print(f"{'Max drawdown':24s}{s['max_drawdown']:>12.2%}{s['benchmark_max_drawdown']:>14.2%}")
-    print(f"{'Volatility (annual)':24s}{s['volatility']:>12.2%}")
-    print(f"{'Sharpe (vs T-bills)':24s}{s['sharpe']:>12.2f}")
-    print(f"{'Best / worst month':24s}{s['best_month']:>12.2%}{s['worst_month']:>14.2%}")
-    print(f"{'Average cash weight':24s}{s['avg_cash_weight']:>12.1%}")
+
+    def block(title, m):
+        print(title)
+        print(f"  {'CAGR':22s}{m['cagr']:>9.2%}")
+        print(f"  {'Max drawdown':22s}{m['max_drawdown']:>9.2%}")
+        print(f"  {'Volatility (annual)':22s}{m['volatility']:>9.2%}")
+        print(f"  {'Sharpe (vs T-bills)':22s}{m['sharpe']:>9.2f}")
+        print(f"  {'Best month':22s}{m['best_month']:>9.2%}")
+        print(f"  {'Worst month':22s}{m['worst_month']:>9.2%}")
+
+    block(f"Strategy (top {args.top} by momentum, trend filter, rest in cash)", s)
+    print(f"  {'Average cash weight':22s}{s['avg_cash_weight']:>9.1%}")
+    print()
+    block(f"Equal-weight (all {n} held at once, 1/{n} each, rebalanced monthly)", s["equal_weight"])
     if args.years:
         from .metrics import calendar_year_returns
         yrs = calendar_year_returns(result.returns)
         bench = (1.0 + result.benchmark.pct_change().dropna()).groupby(
             result.benchmark.index[1:].year).prod() - 1.0
         first_month, last_month = result.returns.index[0], result.returns.index[-1]
-        print("\nCalendar years:")
+        print(f"\nCalendar years:\n  {'':6s}{'strategy':>9s}   {'equal-weight':>12s}")
         for year, r in yrs.items():
             partial = ""
             if year == last_month.year and last_month.month != 12:
                 partial = "  (to %s)" % last_month.strftime("%b")
             elif year == first_month.year and first_month.month != 1:
                 partial = "  (from %s)" % first_month.strftime("%b")
-            print(f"  {year}  {r:>8.2%}   equal-weight {bench.get(year, float('nan')):>8.2%}{partial}")
+            print(f"  {year}  {r:>9.2%}   {bench.get(year, float('nan')):>12.2%}{partial}")
     if args.csv:
         out = pd.DataFrame({"equity": result.equity, "equal_weight": result.benchmark})
         out.to_csv(args.csv, index_label="month_end")

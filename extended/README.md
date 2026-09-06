@@ -3,8 +3,8 @@
 The main backtest starts in 2014 because that is when every ETF in the
 universe has a year of history. This directory pushes the start back to
 **August 2000** by splicing a mutual fund in front of each ETF, which buys
-fourteen more years — two bear markets (2000–02, 2008), a commodity boom,
-and a full rate cycle — at the cost of some fidelity.
+fourteen more years (two bear markets, 2000–02 and 2008, a commodity boom
+and a full rate cycle) at the cost of some fidelity.
 
 **Read the results as less reliable than the 2014 ones.** Before each switch
 date the strategy is trading a fund that is *similar to* the ETF, not the
@@ -71,7 +71,7 @@ slightly understates what the same exposures would return at today's costs.
    so it behaves as a fifth broad equity sleeve rather than a momentum one.
    This is the largest single departure from the rules in the proxy period;
    Faber's own index study used a momentum series here. A large-cap growth
-   fund was considered and rejected — growth and momentum overlap only some
+   fund was considered and rejected: growth and momentum overlap only some
    of the time and the mismatch would be harder to reason about than a plain
    index.
 2. **Commodities (DBC ← QRAAX).** Oppenheimer Real Asset tracked the GSCI
@@ -105,88 +105,108 @@ August 2026:
 ```
 GTAA AGG 6: 2000-08 to 2026-08 (312 months, month-end to month-end)
 
-                            strategy  equal-weight
-CAGR                          10.23%         7.76%
-Max drawdown                 -12.78%       -34.47%
-Volatility (annual)            9.76%
-Sharpe (vs T-bills)             0.82
-Best / worst month             8.17%        -9.75%
-Average cash weight             7.6%
+Strategy (top 6 by momentum, trend filter, rest in cash)
+  CAGR                     10.23%
+  Max drawdown            -12.78%
+  Volatility (annual)       9.76%
+  Sharpe (vs T-bills)        0.82
+  Best month                8.17%
+  Worst month              -9.75%
+  Average cash weight        7.6%
+
+Equal-weight (all 13 held at once, 1/13 each, rebalanced monthly)
+  CAGR                      7.76%
+  Max drawdown            -34.47%
+  Volatility (annual)      10.60%
+  Sharpe (vs T-bills)        0.55
+  Best month                8.41%
+  Worst month             -15.72%
 
 Calendar years:
-  2000     0.57%   equal-weight   -0.54%  (from Sep)
-  2001     2.31%   equal-weight   -0.62%
-  2002    12.77%   equal-weight    3.95%
-  2003    31.53%   equal-weight   27.50%
-  2004    11.78%   equal-weight   15.39%
-  2005     6.54%   equal-weight   10.34%
-  2006    24.10%   equal-weight   15.76%
-  2007    12.65%   equal-weight    9.51%
-  2008    -1.73%   equal-weight  -20.46%
-  2009    16.85%   equal-weight   20.83%
-  2010    13.08%   equal-weight   17.04%
-  2011     5.08%   equal-weight    3.71%
-  2012     8.79%   equal-weight   12.34%
-  2013    23.92%   equal-weight    5.82%
-  2014     9.28%   equal-weight    5.68%
-  2015    -8.11%   equal-weight   -4.48%
-  2016     7.47%   equal-weight    9.97%
-  2017    18.84%   equal-weight   14.50%
-  2018    -1.72%   equal-weight   -6.08%
-  2019     8.03%   equal-weight   19.58%
-  2020    11.92%   equal-weight   12.01%
-  2021    22.13%   equal-weight   11.47%
-  2022    -6.95%   equal-weight  -13.38%
-  2023    -0.71%   equal-weight    9.46%
-  2024    11.51%   equal-weight    8.27%
-  2025    20.57%   equal-weight   16.33%
-  2026    16.51%   equal-weight   11.81%  (to Aug)
+         strategy   equal-weight
+  2000      0.57%         -0.54%  (from Sep)
+  2001      2.31%         -0.62%
+  2002     12.77%          3.95%
+  2003     31.53%         27.50%
+  2004     11.78%         15.39%
+  2005      6.54%         10.34%
+  2006     24.10%         15.76%
+  2007     12.65%          9.51%
+  2008     -1.73%        -20.46%
+  2009     16.85%         20.83%
+  2010     13.08%         17.04%
+  2011      5.08%          3.71%
+  2012      8.79%         12.34%
+  2013     23.92%          5.82%
+  2014      9.28%          5.68%
+  2015     -8.11%         -4.48%
+  2016      7.47%          9.97%
+  2017     18.84%         14.50%
+  2018     -1.72%         -6.08%
+  2019      8.03%         19.58%
+  2020     11.92%         12.01%
+  2021     22.13%         11.47%
+  2022     -6.95%        -13.38%
+  2023     -0.71%          9.46%
+  2024     11.51%          8.27%
+  2025     20.57%         16.33%
+  2026     16.51%         11.81%  (to Aug)
 ```
 
 ```
 GTAA AGG 3: 2000-08 to 2026-08 (312 months, month-end to month-end)
 
-                            strategy  equal-weight
-CAGR                          10.30%         7.76%
-Max drawdown                 -15.59%       -34.47%
-Volatility (annual)           12.16%
-Sharpe (vs T-bills)             0.69
-Best / worst month             9.49%        -8.88%
-Average cash weight             3.3%
+Strategy (top 3 by momentum, trend filter, rest in cash)
+  CAGR                     10.30%
+  Max drawdown            -15.59%
+  Volatility (annual)      12.16%
+  Sharpe (vs T-bills)        0.69
+  Best month                9.49%
+  Worst month              -8.88%
+  Average cash weight        3.3%
+
+Equal-weight (all 13 held at once, 1/13 each, rebalanced monthly)
+  CAGR                      7.76%
+  Max drawdown            -34.47%
+  Volatility (annual)      10.60%
+  Sharpe (vs T-bills)        0.55
+  Best month                8.41%
+  Worst month             -15.72%
 
 Calendar years:
-  2000    -1.49%   equal-weight   -0.54%  (from Sep)
-  2001     4.70%   equal-weight   -0.62%
-  2002    18.47%   equal-weight    3.95%
-  2003    36.31%   equal-weight   27.50%
-  2004    14.98%   equal-weight   15.39%
-  2005     8.10%   equal-weight   10.34%
-  2006    25.65%   equal-weight   15.76%
-  2007    24.62%   equal-weight    9.51%
-  2008     9.31%   equal-weight  -20.46%
-  2009    10.56%   equal-weight   20.83%
-  2010     8.31%   equal-weight   17.04%
-  2011     1.59%   equal-weight    3.71%
-  2012     2.14%   equal-weight   12.34%
-  2013    22.79%   equal-weight    5.82%
-  2014     7.78%   equal-weight    5.68%
-  2015    -6.75%   equal-weight   -4.48%
-  2016     1.80%   equal-weight    9.97%
-  2017    18.09%   equal-weight   14.50%
-  2018    -4.73%   equal-weight   -6.08%
-  2019     4.44%   equal-weight   19.58%
-  2020    16.12%   equal-weight   12.01%
-  2021    25.50%   equal-weight   11.47%
-  2022    -4.35%   equal-weight  -13.38%
-  2023    -3.39%   equal-weight    9.46%
-  2024     7.56%   equal-weight    8.27%
-  2025    23.93%   equal-weight   16.33%
-  2026     9.59%   equal-weight   11.81%  (to Aug)
+         strategy   equal-weight
+  2000     -1.49%         -0.54%  (from Sep)
+  2001      4.70%         -0.62%
+  2002     18.47%          3.95%
+  2003     36.31%         27.50%
+  2004     14.98%         15.39%
+  2005      8.10%         10.34%
+  2006     25.65%         15.76%
+  2007     24.62%          9.51%
+  2008      9.31%        -20.46%
+  2009     10.56%         20.83%
+  2010      8.31%         17.04%
+  2011      1.59%          3.71%
+  2012      2.14%         12.34%
+  2013     22.79%          5.82%
+  2014      7.78%          5.68%
+  2015     -6.75%         -4.48%
+  2016      1.80%          9.97%
+  2017     18.09%         14.50%
+  2018     -4.73%         -6.08%
+  2019      4.44%         19.58%
+  2020     16.12%         12.01%
+  2021     25.50%         11.47%
+  2022     -4.35%        -13.38%
+  2023     -3.39%          9.46%
+  2024      7.56%          8.27%
+  2025     23.93%         16.33%
+  2026      9.59%         11.81%  (to Aug)
 ```
 
 What the longer sample adds to the picture from 2014:
 
-- **The two bear markets are where the rules earn their keep.** Equal-weight
+- **The difference is made in the two bear markets.** Equal-weight
   lost a third of its value in 2008; AGG 6 was down 1.7% for the year and
   AGG 3 was up. The strategy's worst drawdown over 26 years (−12.8%) is
   smaller than equal-weight's drawdown in 2008 alone.
