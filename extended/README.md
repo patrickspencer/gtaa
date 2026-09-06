@@ -245,8 +245,9 @@ Strategy
 "Underwater" means below a previous high: the months an investor spent
 waiting to get back to even. `gtaa --db extended.duckdb backtest --top 6 --underwater` reports
 the share of months spent underwater, the longest stretch from a high to
-its recovery, the current position, and the five deepest drawdowns with
-how long each took to reach bottom and then to recover:
+its recovery, the current position, the five deepest drawdowns with how
+long each took to reach bottom and then to recover, and the three longest
+(the longest is not always among the deepest):
 
 ```
 Underwater (months spent below the previous equity high):
@@ -254,24 +255,34 @@ Strategy
   Time underwater             65% of months
   Longest stretch              32 months (2021-12 to 2024-08)
   Now                      -0.47% below the high
-  Largest drawdowns:
-    peak     trough   recovered     depth  to trough  to recover
-    2008-02  2008-10  2009-09     -12.78%       8 mo       11 mo
-    2021-12  2023-09  2024-08     -12.33%      21 mo       11 mo
-    2015-01  2016-01  2017-02     -10.89%      12 mo       13 mo
-    2018-08  2019-05  2020-08      -9.85%       9 mo       15 mo
-    2004-03  2004-04  2004-11      -9.75%       1 mo        7 mo
+  Deepest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover   total
+    2008-02  2008-10  2009-09     -12.78%       8 mo       11 mo   19 mo
+    2021-12  2023-09  2024-08     -12.33%      21 mo       11 mo   32 mo
+    2015-01  2016-01  2017-02     -10.89%      12 mo       13 mo   25 mo
+    2018-08  2019-05  2020-08      -9.85%       9 mo       15 mo   24 mo
+    2004-03  2004-04  2004-11      -9.75%       1 mo        7 mo    8 mo
+  Longest drawdowns (high to recovery):
+    peak     trough   recovered     depth  to trough  to recover   total
+    2021-12  2023-09  2024-08     -12.33%      21 mo       11 mo   32 mo
+    2015-01  2016-01  2017-02     -10.89%      12 mo       13 mo   25 mo
+    2018-08  2019-05  2020-08      -9.85%       9 mo       15 mo   24 mo
 Equal-weight
   Time underwater             63% of months
   Longest stretch              31 months (2021-12 to 2024-07)
   Now                       0.00% below the high
-  Largest drawdowns:
-    peak     trough   recovered     depth  to trough  to recover
-    2008-05  2009-02  2010-09     -34.47%       9 mo       19 mo
-    2021-12  2022-09  2024-07     -19.68%       9 mo       22 mo
-    2019-12  2020-03  2020-07     -14.52%       3 mo        4 mo
-    2011-04  2011-09  2012-01     -10.41%       5 mo        4 mo
-    2002-05  2002-09  2003-05      -9.26%       4 mo        8 mo
+  Deepest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover   total
+    2008-05  2009-02  2010-09     -34.47%       9 mo       19 mo   28 mo
+    2021-12  2022-09  2024-07     -19.68%       9 mo       22 mo   31 mo
+    2019-12  2020-03  2020-07     -14.52%       3 mo        4 mo    7 mo
+    2011-04  2011-09  2012-01     -10.41%       5 mo        4 mo    9 mo
+    2002-05  2002-09  2003-05      -9.26%       4 mo        8 mo   12 mo
+  Longest drawdowns (high to recovery):
+    peak     trough   recovered     depth  to trough  to recover   total
+    2021-12  2022-09  2024-07     -19.68%       9 mo       22 mo   31 mo
+    2008-05  2009-02  2010-09     -34.47%       9 mo       19 mo   28 mo
+    2014-08  2016-01  2016-06      -9.02%      17 mo        5 mo   22 mo
 ```
 
 AGG 3:
@@ -282,13 +293,18 @@ Strategy
   Time underwater             71% of months
   Longest stretch              32 months (2015-01 to 2017-09)
   Now                      -3.97% below the high
-  Largest drawdowns:
-    peak     trough   recovered     depth  to trough  to recover
-    2010-04  2010-08  2011-02     -15.59%       4 mo        6 mo
-    2022-05  2023-10  2024-11     -15.20%      17 mo       13 mo
-    2018-08  2019-05  2020-08     -15.06%       9 mo       15 mo
-    2015-01  2016-01  2017-09     -15.00%      12 mo       20 mo
-    2008-06  2008-10  2009-09     -13.82%       4 mo       11 mo
+  Deepest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover   total
+    2010-04  2010-08  2011-02     -15.59%       4 mo        6 mo   10 mo
+    2022-05  2023-10  2024-11     -15.20%      17 mo       13 mo   30 mo
+    2018-08  2019-05  2020-08     -15.06%       9 mo       15 mo   24 mo
+    2015-01  2016-01  2017-09     -15.00%      12 mo       20 mo   32 mo
+    2008-06  2008-10  2009-09     -13.82%       4 mo       11 mo   15 mo
+  Longest drawdowns (high to recovery):
+    peak     trough   recovered     depth  to trough  to recover   total
+    2015-01  2016-01  2017-09     -15.00%      12 mo       20 mo   32 mo
+    2022-05  2023-10  2024-11     -15.20%      17 mo       13 mo   30 mo
+    2018-08  2019-05  2020-08     -15.06%       9 mo       15 mo   24 mo
 ```
 
 What the longer sample adds to the picture from 2014:

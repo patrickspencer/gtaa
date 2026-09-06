@@ -102,18 +102,21 @@ def cmd_backtest(args):
         print("\nUnderwater (months spent below the previous equity high):")
         for title, rets in (("Strategy", result.returns), ("Equal-weight", bench_rets)):
             u = metrics.underwater_summary(rets)
-            dd = metrics.drawdowns(rets).head(5)
+            dd = metrics.drawdowns(rets)
             start, end = u["longest_span"]
             end = "not yet recovered" if pd.isna(end) else end.strftime("%Y-%m")
             print(f"{title}")
             print(f"  {'Time underwater':22s}{u['time_underwater']:>9.0%} of months")
             print(f"  {'Longest stretch':22s}{u['longest_months']:>9d} months ({start:%Y-%m} to {end})")
             print(f"  {'Now':22s}{u['current']:>9.2%} below the high")
-            print(f"  Largest drawdowns:\n    {'peak':9s}{'trough':9s}{'recovered':11s}{'depth':>8s}{'to trough':>11s}{'to recover':>12s}")
-            for d in dd.itertuples(index=False):
-                rec = "-" if pd.isna(d.recovery) else d.recovery.strftime("%Y-%m")
-                back = "-" if pd.isna(d.months_to_recover) else f"{int(d.months_to_recover)} mo"
-                print(f"    {d.peak:%Y-%m}  {d.trough:%Y-%m}  {rec:9s}  {d.depth:>8.2%}{d.months_to_trough:>8d} mo{back:>12s}")
+            header = f"    {'peak':9s}{'trough':9s}{'recovered':11s}{'depth':>8s}{'to trough':>11s}{'to recover':>12s}{'total':>8s}"
+            for label, rows in (("Deepest drawdowns:", dd.head(5)),
+                                ("Longest drawdowns (high to recovery):", dd.sort_values("months", ascending=False).head(3))):
+                print(f"  {label}\n{header}")
+                for d in rows.itertuples(index=False):
+                    rec = "-" if pd.isna(d.recovery) else d.recovery.strftime("%Y-%m")
+                    back = "-" if pd.isna(d.months_to_recover) else f"{int(d.months_to_recover)} mo"
+                    print(f"    {d.peak:%Y-%m}  {d.trough:%Y-%m}  {rec:9s}  {d.depth:>8.2%}{d.months_to_trough:>8d} mo{back:>12s}{d.months:>5d} mo")
     if args.csv:
         out = pd.DataFrame({"equity": result.equity, "equal_weight": result.benchmark})
         out.to_csv(args.csv, index_label="month_end")
