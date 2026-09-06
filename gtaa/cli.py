@@ -72,10 +72,14 @@ def cmd_backtest(args):
         yrs = calendar_year_returns(result.returns)
         bench = (1.0 + result.benchmark.pct_change().dropna()).groupby(
             result.benchmark.index[1:].year).prod() - 1.0
-        last_month = result.returns.index[-1]
+        first_month, last_month = result.returns.index[0], result.returns.index[-1]
         print("\nCalendar years:")
         for year, r in yrs.items():
-            partial = "  (to %s)" % last_month.strftime("%b") if year == last_month.year and last_month.month != 12 else ""
+            partial = ""
+            if year == last_month.year and last_month.month != 12:
+                partial = "  (to %s)" % last_month.strftime("%b")
+            elif year == first_month.year and first_month.month != 1:
+                partial = "  (from %s)" % first_month.strftime("%b")
             print(f"  {year}  {r:>8.2%}   equal-weight {bench.get(year, float('nan')):>8.2%}{partial}")
     if args.csv:
         out = pd.DataFrame({"equity": result.equity, "equal_weight": result.benchmark})

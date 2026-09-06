@@ -84,6 +84,15 @@ can actually trade — each asset class needs an ETF. The choices below favour
 Adjusted closes (dividends and splits) from Tiingo make each series a
 total-return series, matching the paper's data.
 
+One practical note on DBC: it is structured as a partnership and issues a
+Schedule K-1 at tax time, which some investors prefer to avoid. Invesco's
+**PDBC** tracks a near-identical basket without the K-1 (it is younger,
+launched November 2014). Swapping it in changes almost nothing: the two
+funds' momentum ranks and trend status differed in one month out of 129,
+and over PDBC's own history (December 2015 to August 2026) AGG 6 returns
+9.61% a year with DBC and 9.68% with PDBC; for AGG 3 it is 8.30% and 8.28%.
+DBC is kept as the default only because its history reaches back to 2006.
+
 ### How far back the backtest goes
 
 Every asset needs twelve month-ends of history before it has a score, and
@@ -93,11 +102,15 @@ and the first realised month is May 2014. Everything else in the universe
 has history to 2004–2007.
 
 That is a shorter sample than Faber's 1973–2012 index study, and it is a
-deliberate trade: this repository backtests the portfolio you can actually
-buy, on the prices it actually had, rather than an index study that can
-only be approximated. Extending the sample backwards would mean splicing in
-mutual funds or indexes with different holdings, costs and tracking, and
-the point of the backtest is precisely to avoid that kind of approximation.
+deliberate trade: the main backtest covers the portfolio you can actually
+buy, on the prices it actually had, with no splicing or approximation.
+
+For a longer view, [`extended/`](extended/) splices a mutual fund in front
+of each ETF and runs the same engine from **August 2000**, through the
+2000–02 and 2008 bear markets. Its README lists every proxy, the date it
+hands over to the ETF, and why it was chosen. Those results are less
+reliable than the 2014 ones — three of the sleeves have no faithful
+substitute before their ETF existed — and are presented with that caveat.
 
 ## Results
 
@@ -115,7 +128,7 @@ Best / worst month             8.17%        -7.09%
 Average cash weight            10.8%
 
 Calendar years:
-  2014     8.57%   equal-weight    1.52%
+  2014     8.57%   equal-weight    1.52%  (from May)
   2015    -8.11%   equal-weight   -4.48%
   2016     7.47%   equal-weight    9.97%
   2017    18.84%   equal-weight   14.50%
@@ -196,6 +209,7 @@ Files:
 | `gtaa/metrics.py` | CAGR, volatility, Sharpe, drawdown, calendar years |
 | `gtaa/cli.py` | the `gtaa` command |
 | `tests/` | the rules and the engine, checked on hand-built price paths |
+| `extended/` | the 2000–present backtest on spliced mutual-fund history, with its own README |
 
 ## Usage
 
@@ -214,7 +228,7 @@ gtaa signal --top 3 --all       # AGG 3, with the full ranking
 gtaa backtest --top 6 --years   # backtest with calendar-year table
 gtaa backtest --top 6 --csv equity.csv
 gtaa coverage                   # what history is stored
-pytest                          # 14 tests, no network
+pytest                          # 17 tests, no network
 ```
 
 The database is `gtaa.duckdb` in the working directory (override with
@@ -246,16 +260,17 @@ where a choice had to be made:
   interpretation would hold more equities in most months.
 - **Ties** in score are broken alphabetically by symbol, which in practice
   never matters at four decimal places.
-- **Backtest starts in 2014**, for the reason given above.
+- **Backtest starts in 2014**, for the reason given above; `extended/`
+  goes back to 2000 with proxies and is documented separately.
 
 ## Tests
 
 `tests/` uses synthetic price paths whose correct answers can be worked out
 by hand: a series that doubles every month (so each k-month return is
 2ᵏ − 1), assets that collapse below their average, top-N with a trending
-asset left out, a gap in history, a partial trailing month, and a backtest
-whose every monthly return is known in advance. None of them touch the
-network.
+asset left out, a gap in history, a partial trailing month, a backtest
+whose every monthly return is known in advance, and the fund-to-ETF splice
+used by `extended/`. None of them touch the network.
 
 ## References
 

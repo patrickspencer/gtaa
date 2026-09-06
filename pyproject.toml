@@ -22,4 +22,4 @@ include = ["gtaa*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = ["tests", "extended"]
