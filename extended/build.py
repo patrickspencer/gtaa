@@ -7,7 +7,9 @@ in front of each ETF.
 For every ETF in the universe, the proxy fund's daily total-return series is
 used for the dates before the ETF's first trading day, scaled so that the two
 series agree on that day. Each side's returns are therefore exactly the
-fund's own; only the level is rescaled. The spliced series is stored under
+fund's own; only the level is rescaled. The unadjusted close and the cash
+dividends are scaled the same way, so the dividend yield the after-tax
+analysis uses is also the fund's own. The spliced series is stored under
 the ETF's symbol, so the ordinary signal query and backtest run on it without
 knowing anything happened. A `sources` table records which fund supplied
 which dates.
@@ -78,10 +80,27 @@ def splice(etf: pd.Series, fund: pd.Series) -> tuple[pd.Series, pd.Timestamp]:
     return pd.concat([prefix, etf]), first
 
 
-def series(rows: list[dict]) -> pd.Series:
+def frame(rows: list[dict]) -> pd.DataFrame:
+    """Daily close, adjusted close and cash dividend per share, indexed by date."""
     df = pd.DataFrame(rows)
     df["date"] = pd.to_datetime(df["date"].str[:10])
-    return df.set_index("date")["adjClose"].astype(float)
+    df["dividend"] = df["divCash"].fillna(0.0)
+    return (df.set_index("date")[["close", "adjClose", "dividend"]]
+              .rename(columns={"adjClose": "adj_close"}).astype(float).sort_index())
+
+
+def splice_frame(etf: pd.DataFrame, fund: pd.DataFrame) -> tuple[pd.DataFrame, pd.Timestamp]:
+    """Splice all three columns. The adjusted close is joined by `splice`;
+    the unadjusted close and the dividend are scaled by one shared factor
+    so that dividend / close (the yield the tax analysis needs) is the
+    fund's own on every day."""
+    adj, first = splice(etf["adj_close"], fund["adj_close"])
+    anchor = fund["close"][fund.index <= first].iloc[-1]
+    factor = etf["close"].iloc[0] / anchor
+    prefix = fund[fund.index < first]
+    close = pd.concat([prefix["close"] * factor, etf["close"]])
+    dividend = pd.concat([prefix["dividend"] * factor, etf["dividend"]])
+    return pd.DataFrame({"close": close, "adj_close": adj, "dividend": dividend}), first
 
 
 def build(db: Path, client: data.TiingoClient | None = None) -> pd.DataFrame:
@@ -95,14 +114,15 @@ def build(db: Path, client: data.TiingoClient | None = None) -> pd.DataFrame:
     """)
     report = []
     for p in PROXIES:
-        etf = series(client.daily_prices(p.symbol, FETCH_FROM))
-        fund = series(client.daily_prices(p.fund, FETCH_FROM))
-        combined, first = splice(etf, fund)
+        etf = frame(client.daily_prices(p.symbol, FETCH_FROM))
+        fund = frame(client.daily_prices(p.fund, FETCH_FROM))
+        combined, first = splice_frame(etf, fund)
         con.execute("DELETE FROM prices WHERE symbol = ?", [p.symbol])
         con.execute("DELETE FROM sources WHERE symbol = ?", [p.symbol])
         con.executemany(
-            "INSERT INTO prices VALUES (?, ?, ?, ?)",
-            [(p.symbol, d.date(), float(v), float(v)) for d, v in combined.items()],
+            "INSERT INTO prices VALUES (?, ?, ?, ?, ?)",
+            [(p.symbol, d.date(), float(r.close), float(r.adj_close), float(r.dividend))
+             for d, r in combined.iterrows()],
         )
         before = combined.index[combined.index < first]
         sources = [(p.symbol, p.symbol, first.date(), combined.index[-1].date())]

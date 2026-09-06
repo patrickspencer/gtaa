@@ -88,7 +88,7 @@ def test_a_trailing_partial_month_is_not_a_realised_return(con):
     load(con, {"A": a, "B": b, "BIL": [100.0] * 16})
     before = run_backtest(con, top_n=2, symbols=("A", "B"))
     # A few days into the next month, prices exist but the month is not over.
-    con.executemany("INSERT INTO prices VALUES (?, ?, ?, ?)",
+    con.executemany("INSERT INTO prices (symbol, date, close, adj_close) VALUES (?, ?, ?, ?)",
                     [(s, "2021-05-04", 999.0, 999.0) for s in ("A", "B", "BIL")])
     after = run_backtest(con, top_n=2, symbols=("A", "B"))
     assert list(after.returns.index) == list(before.returns.index)

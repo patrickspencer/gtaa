@@ -199,6 +199,7 @@ Strategy
   1 year     39.03%  2020-11 to 2021-10   -10.89%  2015-02 to 2016-01     6.36%   70% of 137
   3 years    16.77%  2023-07 to 2026-06     0.88%  2021-05 to 2024-04     7.87%  100% of 113
   5 years    12.28%  2016-11 to 2021-10     3.21%  2015-04 to 2020-03     7.55%  100% of 89
+
 Equal-weight
   window       best  (period)               worst  (period)              median  positive
   1 year     33.39%  2020-04 to 2021-03   -16.52%  2021-10 to 2022-09     7.64%   77% of 137
@@ -244,6 +245,7 @@ Strategy
     2021-12  2023-09  2024-08     -12.33%      21 mo       11 mo   32 mo
     2015-01  2016-01  2017-02     -10.89%      12 mo       13 mo   25 mo
     2018-08  2019-05  2020-08      -9.85%       9 mo       15 mo   24 mo
+
 Equal-weight
   Time underwater             63% of months
   Longest stretch              31 months (2021-12 to 2024-07)
@@ -297,83 +299,83 @@ recover with the market.
 
 The backtests above are pre-tax. In a US taxable account the rules cost
 tax every time a position is sold at a gain and every time a fund pays a
-distribution, and how much depends on the investor's bracket. The tables
-below were produced by re-running the backtest as an actual portfolio of tax
-lots (the tax model itself is not part of this repository):
+distribution, and how much depends on the investor's bracket.
+`gtaa backtest --top 6 --taxes` re-runs the backtest as an actual
+portfolio of tax lots (`gtaa/taxes.py`) and reports the growth rate after
+tax at six 2025 federal brackets:
 
 - Every purchase is a lot; sales consume lots oldest-first. A gain on a lot
   held more than a year is long-term, otherwise short-term and taxed as
   ordinary income. Re-selecting the same fund keeps its old lots.
 - Each month's return is split into price change and distributions using
-  the funds' actual cash dividends. Distributions are taxed in the year
-  received (qualified for stock funds, ordinary income for bond
-  funds and VNQ) and reinvested.
+  the funds' actual cash dividends (Tiingo's `divCash`, stored in the
+  `dividend` column). Distributions are taxed in the year received
+  (qualified for stock funds, ordinary income for bond funds and VNQ)
+  and reinvested.
 - GLD is a collectible: its long-term gains are taxed at the ordinary
   rate capped at 28%. DBC holds futures and issues a K-1: its gains are
   marked to market every year whether sold or not, 60% long-term and
   40% short-term.
 - At each year-end gains and losses are netted, a net loss carries forward,
-  and the tax is paid out of the portfolio.
-- **Tax paid yearly** leaves gains on open positions untaxed; **if
+  and the tax is paid out of the portfolio by selling a little of
+  everything.
+- **After-tax CAGR** leaves gains on open positions untaxed; **if
   liquidated** also pays the tax due on selling everything at the end.
   **Drag** is the liquidated after-tax CAGR minus the pre-tax CAGR, in
-  percentage points.
+  percentage points. "Taxable income by kind" is the split of everything
+  taxed over the run, so the short-term share is the share of gains a
+  strategy could not hold for a year.
 
-Brackets are 2025 federal rates on ordinary income and long-term gains; the
-3.8% net investment income tax is added from the 32% bracket up. No state
-tax. Simplifications, all of which understate tax slightly: no wash-sale
-rule, no $3,000 loss offset against ordinary income, all stock-fund
-dividends treated as qualified, no foreign tax credit,
-no 20% deduction on REIT distributions. Nothing here
-is tax advice.
+The 3.8% net investment income tax is added from the 32% bracket up.
+`--state 0.05` adds a flat state rate to every bracket. Simplifications,
+all of which understate tax slightly: no wash-sale rule, no $3,000 loss
+offset against ordinary income, all stock-fund dividends treated as
+qualified, no foreign tax credit, no 20% deduction on REIT
+distributions. At 0% rates the simulation reproduces the pre-tax equity
+curve exactly, which is how it is tested. Nothing here is tax advice.
 
-### GTAA AGG 6
+`gtaa backtest --top 6 --taxes`:
 
-Taxable income over the period: **17% short-term gains** and **48% long-term
-gains**, 13% collectible (gold) gains, 8% ordinary distributions (bond
-interest), 14% qualified dividends.
+```
+After-tax returns (2025 federal brackets, no state tax; tax paid out of the portfolio each year):
+Strategy
+  Taxable income by kind: short-term gains 17%, long-term gains 48%, collectible gains 13%, ordinary distributions 8%, qualified dividends 14%
+  bracket (ordinary / long-term)   after-tax CAGR  if liquidated    drag
+  pre-tax                                   8.31%          8.31%
+  12% / 0%                                  7.93%          7.89%   -0.42
+  22% / 15%                                 7.05%          6.90%   -1.41
+  24% / 15%                                 6.98%          6.83%   -1.48
+  32% / 15% + NIIT                          6.48%          6.27%   -2.04
+  35% / 15% + NIIT                          6.41%          6.18%   -2.13
+  37% / 20% + NIIT                          6.16%          5.90%   -2.41
 
-| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
-|---|---:|---:|---:|
-| pre-tax | 8.31% | 8.31% | |
-| 12% / 0% | 7.93% | 7.89% | -0.42 |
-| 22% / 15% | 7.05% | 6.90% | -1.41 |
-| 24% / 15% | 6.98% | 6.83% | -1.48 |
-| 32% / 15% + NIIT | 6.48% | 6.27% | -2.04 |
-| 35% / 15% + NIIT | 6.41% | 6.18% | -2.13 |
-| 37% / 20% + NIIT | 6.16% | 5.90% | -2.41 |
+Equal-weight
+  Taxable income by kind: short-term gains 4%, long-term gains 53%, collectible gains 13%, ordinary distributions 16%, qualified dividends 14%
+  bracket (ordinary / long-term)   after-tax CAGR  if liquidated    drag
+  pre-tax                                   6.93%          6.93%
+  12% / 0%                                  6.71%          6.67%   -0.26
+  22% / 15%                                 6.05%          5.82%   -1.11
+  24% / 15%                                 6.01%          5.78%   -1.16
+  32% / 15% + NIIT                          5.68%          5.38%   -1.56
+  35% / 15% + NIIT                          5.63%          5.33%   -1.60
+  37% / 20% + NIIT                          5.44%          5.08%   -1.85
+```
 
-### GTAA AGG 3
+AGG 3 (the equal-weight block is the same as above):
 
-Taxable income over the period: **27% short-term gains** and **28% long-term
-gains**, 22% collectible (gold) gains, 8% ordinary distributions (bond
-interest), 16% qualified dividends.
-
-| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
-|---|---:|---:|---:|
-| pre-tax | 7.11% | 7.11% | |
-| 12% / 0% | 6.59% | 6.58% | -0.53 |
-| 22% / 15% | 5.82% | 5.80% | -1.31 |
-| 24% / 15% | 5.73% | 5.71% | -1.40 |
-| 32% / 15% + NIIT | 5.17% | 5.13% | -1.98 |
-| 35% / 15% + NIIT | 5.07% | 5.03% | -2.08 |
-| 37% / 20% + NIIT | 4.89% | 4.85% | -2.26 |
-
-### Equal-weight (all 13, rebalanced monthly)
-
-Taxable income over the period: **4% short-term gains** and **53% long-term
-gains**, 13% collectible (gold) gains, 16% ordinary distributions (bond
-interest), 14% qualified dividends.
-
-| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
-|---|---:|---:|---:|
-| pre-tax | 6.93% | 6.93% | |
-| 12% / 0% | 6.71% | 6.67% | -0.26 |
-| 22% / 15% | 6.05% | 5.82% | -1.11 |
-| 24% / 15% | 6.01% | 5.78% | -1.16 |
-| 32% / 15% + NIIT | 5.68% | 5.38% | -1.56 |
-| 35% / 15% + NIIT | 5.63% | 5.33% | -1.60 |
-| 37% / 20% + NIIT | 5.44% | 5.08% | -1.85 |
+```
+After-tax returns (2025 federal brackets, no state tax; tax paid out of the portfolio each year):
+Strategy
+  Taxable income by kind: short-term gains 27%, long-term gains 28%, collectible gains 22%, ordinary distributions 8%, qualified dividends 16%
+  bracket (ordinary / long-term)   after-tax CAGR  if liquidated    drag
+  pre-tax                                   7.11%          7.11%
+  12% / 0%                                  6.59%          6.58%   -0.53
+  22% / 15%                                 5.82%          5.80%   -1.31
+  24% / 15%                                 5.73%          5.71%   -1.40
+  32% / 15% + NIIT                          5.17%          5.13%   -1.98
+  35% / 15% + NIIT                          5.07%          5.03%   -2.08
+  37% / 20% + NIIT                          4.89%          4.85%   -2.26
+```
 
 What the tables say: the rules cost roughly one to two and a half points
 of return a year in tax, depending on bracket, against one to two points
@@ -417,7 +419,7 @@ The whole strategy is one SQL query (`gtaa/signals.py`) over a single
 table:
 
 ```
-prices(symbol, date, close, adj_close)
+prices(symbol, date, close, adj_close, dividend)
 ```
 
 DuckDB window functions do all the work: `row_number()` picks the last
@@ -439,11 +441,12 @@ Files:
 
 | | |
 |---|---|
-| `gtaa/universe.py` | the 13 asset classes, ETFs, lookbacks, SMA length |
+| `gtaa/universe.py` | the 13 asset classes, ETFs, tax treatments, lookbacks, SMA length |
 | `gtaa/data.py` | Tiingo client and the DuckDB `prices` table |
 | `gtaa/signals.py` | the SQL query, selection rule, current allocation |
 | `gtaa/backtest.py` | the monthly engine and its benchmark |
 | `gtaa/metrics.py` | CAGR, volatility, Sharpe, calendar years, rolling windows, drawdown episodes |
+| `gtaa/taxes.py` | after-tax simulation: tax lots, holding periods, distributions, brackets |
 | `gtaa/cli.py` | the `gtaa` command |
 | `tests/` | the rules and the engine, checked on hand-built price paths |
 | `extended/` | the 2000–present backtest on spliced mutual-fund history, with its own README |
@@ -464,9 +467,10 @@ gtaa signal --top 6             # this month's allocation
 gtaa signal --top 3 --all       # AGG 3, with the full ranking
 gtaa backtest --top 6 --years   # backtest with calendar-year table
 gtaa backtest --top 6 --rolling --underwater   # rolling windows, drawdowns
+gtaa backtest --top 6 --taxes --state 0.05       # after-tax CAGR by bracket
 gtaa backtest --top 6 --csv equity.csv
 gtaa coverage                   # what history is stored
-pytest                          # 22 tests, no network
+pytest                          # 31 tests, no network
 ```
 
 The database is `gtaa.duckdb` in the working directory (override with
@@ -508,8 +512,10 @@ by hand: a series that doubles every month (so each k-month return is
 2ᵏ − 1), assets that collapse below their average, top-N with a trending
 asset left out, a gap in history, a partial trailing month, a backtest
 whose every monthly return is known in advance, rolling windows and
-drawdown episodes on short hand-built series, and the fund-to-ETF splice
-used by `extended/`. None of them touch the network.
+drawdown episodes on short hand-built series, the fund-to-ETF splice
+used by `extended/`, and the tax engine on portfolios whose tax bills can
+be worked out by hand (including that at 0% rates it reproduces the
+backtest exactly). None of them touch the network.
 
 ## References
 

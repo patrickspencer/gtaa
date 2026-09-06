@@ -2,12 +2,15 @@
 
 Daily prices live in a DuckDB file with one table:
 
-    prices(symbol VARCHAR, date DATE, close DOUBLE, adj_close DOUBLE)
+    prices(symbol VARCHAR, date DATE, close DOUBLE, adj_close DOUBLE, dividend DOUBLE)
 
 `adj_close` is the dividend- and split-adjusted close, which makes
-consecutive values a total-return series — the quantity Faber's rules are
+consecutive values a total-return series, the quantity Faber's rules are
 defined on. Everything downstream (month-end closes, momentum, moving
-averages, the backtest) is computed from this table with SQL.
+averages, the backtest) is computed from this table with SQL. `dividend`
+is the cash distribution per share paid that day (zero on other days); it
+is only used by the after-tax analysis, which needs to know how much of
+each month's return arrived as a taxable distribution.
 
 Prices come from Tiingo (https://www.tiingo.com), which needs a free API key
 in the TIINGO_API_KEY environment variable. Nothing else in the project
@@ -33,6 +36,7 @@ CREATE TABLE IF NOT EXISTS prices (
     date      DATE    NOT NULL,
     close     DOUBLE  NOT NULL,
     adj_close DOUBLE  NOT NULL,
+    dividend  DOUBLE  NOT NULL DEFAULT 0,
     PRIMARY KEY (symbol, date)
 );
 """
@@ -42,6 +46,8 @@ def connect(path: Path | str = DEFAULT_DB) -> duckdb.DuckDBPyConnection:
     """Open (creating if needed) the price database."""
     con = duckdb.connect(str(path))
     con.execute(SCHEMA)
+    # Databases built before the dividend column existed.
+    con.execute("ALTER TABLE prices ADD COLUMN IF NOT EXISTS dividend DOUBLE DEFAULT 0")
     return con
 
 
@@ -53,7 +59,7 @@ class TiingoClient:
         self.session = session or requests.Session()
 
     def daily_prices(self, symbol: str, start: str = "1990-01-01") -> list[dict]:
-        """Daily rows for a symbol from `start` to today: date, close, adjClose."""
+        """Daily rows for a symbol from `start` to today: date, close, adjClose, divCash."""
         resp = self.session.get(
             TIINGO_URL.format(symbol=symbol),
             params={"startDate": start, "format": "json", "resampleFreq": "daily"},
@@ -67,14 +73,14 @@ class TiingoClient:
 def store_prices(con: duckdb.DuckDBPyConnection, symbol: str, rows: Iterable[dict]) -> int:
     """Upsert Tiingo rows for one symbol. Returns the number of rows written."""
     records = [
-        (symbol, r["date"][:10], float(r["close"]), float(r["adjClose"]))
+        (symbol, r["date"][:10], float(r["close"]), float(r["adjClose"]), float(r.get("divCash") or 0.0))
         for r in rows
         if r.get("close") is not None and r.get("adjClose") is not None
     ]
     if not records:
         return 0
     con.executemany(
-        "INSERT OR REPLACE INTO prices (symbol, date, close, adj_close) VALUES (?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO prices (symbol, date, close, adj_close, dividend) VALUES (?, ?, ?, ?, ?)",
         records,
     )
     return len(records)

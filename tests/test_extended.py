@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from build import splice
+from build import splice, splice_frame
 
 
 def daily(start, values):
@@ -36,3 +36,17 @@ def test_fund_that_starts_after_the_etf_is_rejected():
     etf = daily("2020-01-06", [100, 110])
     with pytest.raises(ValueError):
         splice(etf, fund)
+
+
+def test_splice_frame_keeps_the_funds_dividend_yield():
+    fund = pd.DataFrame({"close": [20.0, 21.0, 22.0], "adj_close": [10.0, 10.5, 11.0], "dividend": [0.0, 0.42, 0.0]},
+                        index=pd.bdate_range("2020-01-01", periods=3))
+    etf = pd.DataFrame({"close": [110.0, 121.0], "adj_close": [50.0, 55.0], "dividend": [0.0, 1.1]},
+                       index=pd.bdate_range("2020-01-03", periods=2))
+    out, first = splice_frame(etf, fund)
+    assert first == pd.Timestamp("2020-01-03")
+    assert out["adj_close"].tolist() == pytest.approx([50 * 10 / 11, 50 * 10.5 / 11, 50, 55])
+    # close and dividend are scaled by the same factor (110 / 22 = 5), so the
+    # yield on the fund's ex-date is unchanged: 0.42 / 20 == 2.1 / 100.
+    assert out["close"].tolist() == pytest.approx([100.0, 105.0, 110.0, 121.0])
+    assert out["dividend"].tolist() == pytest.approx([0.0, 2.1, 0.0, 1.1])

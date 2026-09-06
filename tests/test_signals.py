@@ -23,7 +23,7 @@ def load(con: duckdb.DuckDBPyConnection, series: dict[str, list[float]], start="
             mid = me - pd.Timedelta(days=15)
             rows.append((symbol, mid.date().isoformat(), close * 0.5, close * 0.5))  # ignored
             rows.append((symbol, me.date().isoformat(), close, close))
-    con.executemany("INSERT INTO prices VALUES (?, ?, ?, ?)", rows)
+    con.executemany("INSERT INTO prices (symbol, date, close, adj_close) VALUES (?, ?, ?, ?)", rows)
 
 
 @pytest.fixture
