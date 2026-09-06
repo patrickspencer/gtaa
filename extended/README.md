@@ -307,6 +307,93 @@ Strategy
     2018-08  2019-05  2020-08     -15.06%       9 mo       15 mo   24 mo
 ```
 
+## After-tax returns
+
+The backtests above are pre-tax. In a US taxable account the rules cost
+tax every time a position is sold at a gain and every time a fund pays a
+distribution, and how much depends on the investor's bracket. The tables
+below were produced by re-running the backtest as an actual portfolio of tax
+lots (the tax model itself is not part of this repository):
+
+- Every purchase is a lot; sales consume lots oldest-first. A gain on a lot
+  held more than a year is long-term, otherwise short-term and taxed as
+  ordinary income. Re-selecting the same fund keeps its old lots.
+- Each month's return is split into price change and distributions using
+  the funds' actual cash dividends. Distributions are taxed in the year
+  received (qualified for stock funds, ordinary income for bond
+  funds and VNQ) and reinvested.
+- GLD is a collectible: its long-term gains are taxed at the ordinary
+  rate capped at 28%. DBC holds futures and issues a K-1: its gains are
+  marked to market every year whether sold or not, 60% long-term and
+  40% short-term.
+- At each year-end gains and losses are netted, a net loss carries forward,
+  and the tax is paid out of the portfolio.
+- **Tax paid yearly** leaves gains on open positions untaxed; **if
+  liquidated** also pays the tax due on selling everything at the end.
+  **Drag** is the liquidated after-tax CAGR minus the pre-tax CAGR, in
+  percentage points.
+
+Brackets are 2025 federal rates on ordinary income and long-term gains; the
+3.8% net investment income tax is added from the 32% bracket up. No state
+tax. Simplifications, all of which understate tax slightly: no wash-sale
+rule, no $3,000 loss offset against ordinary income, all stock-fund
+dividends treated as qualified, no foreign tax credit,
+no 20% deduction on REIT distributions. Nothing here
+is tax advice.
+
+### GTAA AGG 6
+
+Taxable income over the period: **18% short-term gains** and **51% long-term
+gains**, 8% collectible (gold) gains, 10% ordinary distributions (bond
+interest), 12% qualified dividends.
+
+| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
+|---|---:|---:|---:|
+| pre-tax | 10.23% | 10.23% | |
+| 12% / 0% | 9.72% | 9.69% | -0.54 |
+| 22% / 15% | 8.58% | 8.51% | -1.73 |
+| 24% / 15% | 8.49% | 8.42% | -1.82 |
+| 32% / 15% + NIIT | 7.80% | 7.69% | -2.54 |
+| 35% / 15% + NIIT | 7.67% | 7.56% | -2.67 |
+| 37% / 20% + NIIT | 7.35% | 7.22% | -3.01 |
+
+### GTAA AGG 3
+
+Taxable income over the period: **40% short-term gains** and **26% long-term
+gains**, 12% collectible (gold) gains, 10% ordinary distributions (bond
+interest), 13% qualified dividends.
+
+| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
+|---|---:|---:|---:|
+| pre-tax | 10.30% | 10.30% | |
+| 12% / 0% | 9.58% | 9.57% | -0.73 |
+| 22% / 15% | 8.45% | 8.44% | -1.86 |
+| 24% / 15% | 8.32% | 8.31% | -1.98 |
+| 32% / 15% + NIIT | 7.48% | 7.46% | -2.84 |
+| 35% / 15% + NIIT | 7.30% | 7.29% | -3.01 |
+| 37% / 20% + NIIT | 7.01% | 6.99% | -3.30 |
+
+### Equal-weight (all 13, rebalanced monthly)
+
+Taxable income over the period: **2% short-term gains** and **53% long-term
+gains**, 13% collectible (gold) gains, 19% ordinary distributions (bond
+interest), 14% qualified dividends.
+
+| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
+|---|---:|---:|---:|
+| pre-tax | 7.76% | 7.76% | |
+| 12% / 0% | 7.46% | 7.45% | -0.31 |
+| 22% / 15% | 6.63% | 6.53% | -1.23 |
+| 24% / 15% | 6.58% | 6.47% | -1.29 |
+| 32% / 15% + NIIT | 6.16% | 6.02% | -1.74 |
+| 35% / 15% + NIIT | 6.10% | 5.96% | -1.80 |
+| 37% / 20% + NIIT | 5.86% | 5.69% | -2.07 |
+
+The longer sample has a higher pre-tax return and a proportionally larger
+tax bill; the short-term share of AGG 3's gains rises to 40% because it
+rotated more in 2000–2013 than since. Note that the proxy mutual funds
+also distributed capital gains, which the model taxes like dividends.
+
 What the longer sample adds to the picture from 2014:
 
 - **The difference is made in the two bear markets.** Equal-weight

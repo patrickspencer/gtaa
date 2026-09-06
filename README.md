@@ -293,6 +293,96 @@ gives up ground slowly in choppy markets (2015, 2018, 2023) and takes a
 year or more to climb back, while equal-weight's drawdowns are sharper but
 recover with the market.
 
+## After-tax returns
+
+The backtests above are pre-tax. In a US taxable account the rules cost
+tax every time a position is sold at a gain and every time a fund pays a
+distribution, and how much depends on the investor's bracket. The tables
+below were produced by re-running the backtest as an actual portfolio of tax
+lots (the tax model itself is not part of this repository):
+
+- Every purchase is a lot; sales consume lots oldest-first. A gain on a lot
+  held more than a year is long-term, otherwise short-term and taxed as
+  ordinary income. Re-selecting the same fund keeps its old lots.
+- Each month's return is split into price change and distributions using
+  the funds' actual cash dividends. Distributions are taxed in the year
+  received (qualified for stock funds, ordinary income for bond
+  funds and VNQ) and reinvested.
+- GLD is a collectible: its long-term gains are taxed at the ordinary
+  rate capped at 28%. DBC holds futures and issues a K-1: its gains are
+  marked to market every year whether sold or not, 60% long-term and
+  40% short-term.
+- At each year-end gains and losses are netted, a net loss carries forward,
+  and the tax is paid out of the portfolio.
+- **Tax paid yearly** leaves gains on open positions untaxed; **if
+  liquidated** also pays the tax due on selling everything at the end.
+  **Drag** is the liquidated after-tax CAGR minus the pre-tax CAGR, in
+  percentage points.
+
+Brackets are 2025 federal rates on ordinary income and long-term gains; the
+3.8% net investment income tax is added from the 32% bracket up. No state
+tax. Simplifications, all of which understate tax slightly: no wash-sale
+rule, no $3,000 loss offset against ordinary income, all stock-fund
+dividends treated as qualified, no foreign tax credit,
+no 20% deduction on REIT distributions. Nothing here
+is tax advice.
+
+### GTAA AGG 6
+
+Taxable income over the period: **17% short-term gains** and **48% long-term
+gains**, 13% collectible (gold) gains, 8% ordinary distributions (bond
+interest), 14% qualified dividends.
+
+| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
+|---|---:|---:|---:|
+| pre-tax | 8.31% | 8.31% | |
+| 12% / 0% | 7.93% | 7.89% | -0.42 |
+| 22% / 15% | 7.05% | 6.90% | -1.41 |
+| 24% / 15% | 6.98% | 6.83% | -1.48 |
+| 32% / 15% + NIIT | 6.48% | 6.27% | -2.04 |
+| 35% / 15% + NIIT | 6.41% | 6.18% | -2.13 |
+| 37% / 20% + NIIT | 6.16% | 5.90% | -2.41 |
+
+### GTAA AGG 3
+
+Taxable income over the period: **27% short-term gains** and **28% long-term
+gains**, 22% collectible (gold) gains, 8% ordinary distributions (bond
+interest), 16% qualified dividends.
+
+| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
+|---|---:|---:|---:|
+| pre-tax | 7.11% | 7.11% | |
+| 12% / 0% | 6.59% | 6.58% | -0.53 |
+| 22% / 15% | 5.82% | 5.80% | -1.31 |
+| 24% / 15% | 5.73% | 5.71% | -1.40 |
+| 32% / 15% + NIIT | 5.17% | 5.13% | -1.98 |
+| 35% / 15% + NIIT | 5.07% | 5.03% | -2.08 |
+| 37% / 20% + NIIT | 4.89% | 4.85% | -2.26 |
+
+### Equal-weight (all 13, rebalanced monthly)
+
+Taxable income over the period: **4% short-term gains** and **53% long-term
+gains**, 13% collectible (gold) gains, 16% ordinary distributions (bond
+interest), 14% qualified dividends.
+
+| Bracket (ordinary / long-term) | After-tax CAGR, tax paid yearly | If liquidated at the end | Drag (points) |
+|---|---:|---:|---:|
+| pre-tax | 6.93% | 6.93% | |
+| 12% / 0% | 6.71% | 6.67% | -0.26 |
+| 22% / 15% | 6.05% | 5.82% | -1.11 |
+| 24% / 15% | 6.01% | 5.78% | -1.16 |
+| 32% / 15% + NIIT | 5.68% | 5.38% | -1.56 |
+| 35% / 15% + NIIT | 5.63% | 5.33% | -1.60 |
+| 37% / 20% + NIIT | 5.44% | 5.08% | -1.85 |
+
+What the tables say: the rules cost roughly one to two and a half points
+of return a year in tax, depending on bracket, against one to two points
+for holding everything. Most of the strategy's realised gains are
+long-term because a fund that stays in the top six keeps its original
+lot; the short-term share is higher for AGG 3, which turns over more. At
+the top bracket AGG 6 still beats equal-weight after tax (5.90% against
+5.08% if liquidated), by a smaller margin than before tax.
+
 ## Extended backtest (2000 to present)
 
 The [`extended/`](extended/) directory runs the same engine from
