@@ -27,8 +27,11 @@ def sharpe(monthly: pd.Series, cash: pd.Series) -> float:
 
 
 def max_drawdown(monthly: pd.Series) -> float:
+    """The deepest fall from a previous high, counting the starting value as
+    a high (so a decline that begins in the first month is measured)."""
     equity = (1.0 + monthly).cumprod()
-    return float((equity / equity.cummax() - 1.0).min())
+    peak = equity.cummax().clip(lower=1.0)
+    return float((equity / peak - 1.0).min())
 
 
 def calendar_year_returns(monthly: pd.Series) -> pd.Series:

@@ -104,12 +104,11 @@ def build(db: Path, client: data.TiingoClient | None = None) -> pd.DataFrame:
             "INSERT INTO prices VALUES (?, ?, ?, ?)",
             [(p.symbol, d.date(), float(v), float(v)) for d, v in combined.items()],
         )
-        last_fund = combined.index[combined.index < first][-1]
-        con.executemany(
-            "INSERT INTO sources VALUES (?, ?, ?, ?)",
-            [(p.symbol, p.fund, combined.index[0].date(), last_fund.date()),
-             (p.symbol, p.symbol, first.date(), combined.index[-1].date())],
-        )
+        before = combined.index[combined.index < first]
+        sources = [(p.symbol, p.symbol, first.date(), combined.index[-1].date())]
+        if len(before):   # the fund contributed nothing if the ETF predates the fetch window
+            sources.append((p.symbol, p.fund, before[0].date(), before[-1].date()))
+        con.executemany("INSERT INTO sources VALUES (?, ?, ?, ?)", sources)
         report.append((p.symbol, p.fund, combined.index[0].date(), first.date()))
     con.close()
     return pd.DataFrame(report, columns=["symbol", "fund", "fund_from", "etf_from"])

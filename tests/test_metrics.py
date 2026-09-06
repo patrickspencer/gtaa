@@ -63,3 +63,8 @@ def test_a_series_that_only_rises_has_no_drawdowns():
     assert drawdowns(r).empty
     u = underwater_summary(r)
     assert u["time_underwater"] == 0.0 and u["longest_months"] == 0 and u["current"] == 0.0
+
+
+def test_max_drawdown_counts_a_fall_from_the_starting_value():
+    from gtaa.metrics import max_drawdown
+    assert max_drawdown(monthly([-0.10, -0.10, 0.50])) == pytest.approx(-0.19)
