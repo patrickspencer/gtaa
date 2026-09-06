@@ -24,9 +24,10 @@ deliberate departure from the paper is listed under [Deviations](#deviations-fro
 
 ## The strategy
 
-Faber introduced the tactical asset allocation model in *A Quantitative
-Approach to Tactical Asset Allocation* (2007; updated 2013), and the
-relative-strength extension in *Relative Strength Strategies for Investing*
+Faber introduced the tactical asset allocation model in [*A Quantitative
+Approach to Tactical Asset Allocation*](https://mebfaber.com/wp-content/uploads/2016/05/SSRN-id962461.pdf)
+(2007; updated 2013), and the relative-strength extension in [*Relative
+Strength Strategies for Investing*](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1585517)
 (2010). The aggressive variant combines the two. In the 2013 paper's words:
 
 > This portfolio begins with the asset classes listed in the GTAA Moderate
@@ -105,12 +106,8 @@ That is a shorter sample than Faber's 1973–2012 index study, and it is a
 deliberate trade: the main backtest covers the portfolio you can actually
 buy, on the prices it actually had, with no splicing or approximation.
 
-For a longer view, [`extended/`](extended/) splices a mutual fund in front
-of each ETF and runs the same engine from **August 2000**, through the
-2000–02 and 2008 bear markets. Its README lists every proxy, the date it
-hands over to the ETF, and why it was chosen. Those results are less
-reliable than the 2014 ones, since three of the sleeves have no faithful
-substitute before their ETF existed, and are presented with that caveat.
+For a longer view, see the [extended backtest](#extended-backtest-2000-to-present)
+below, which goes back to 2000 with proxies.
 
 ## Results
 
@@ -187,6 +184,117 @@ this period, not a forecast. There are no transaction costs, and a monthly
 rebalanced 6-asset portfolio does trade: expect real-world returns somewhat
 lower.
 
+### Rolling periods
+
+The full-period CAGR hides how different the experience was depending on
+when you started. `gtaa backtest --top 6 --rolling` looks at every 1-,
+3- and 5-year window of consecutive months and reports the best and worst
+(annualised, with the months they cover), the median, and how many windows
+were positive:
+
+```
+Rolling returns (annualised, every window of consecutive months):
+Strategy
+  window       best  (period)               worst  (period)              median  positive
+  1 year     39.03%  2020-11 to 2021-10   -10.89%  2015-02 to 2016-01     6.36%   70% of 137
+  3 years    16.77%  2023-07 to 2026-06     0.88%  2021-05 to 2024-04     7.87%  100% of 113
+  5 years    12.28%  2016-11 to 2021-10     3.21%  2015-04 to 2020-03     7.55%  100% of 89
+Equal-weight
+  window       best  (period)               worst  (period)              median  positive
+  1 year     33.39%  2020-04 to 2021-03   -16.52%  2021-10 to 2022-09     7.64%   77% of 137
+  3 years    15.07%  2023-06 to 2026-05     0.15%  2021-05 to 2024-04     6.22%  100% of 113
+  5 years    10.10%  2016-03 to 2021-02     2.53%  2015-04 to 2020-03     6.22%  100% of 89
+```
+
+AGG 3 (the equal-weight rows are the same as above):
+
+```
+Rolling returns (annualised, every window of consecutive months):
+Strategy
+  window       best  (period)               worst  (period)              median  positive
+  1 year     36.21%  2020-07 to 2021-06   -15.00%  2015-02 to 2016-01     5.85%   67% of 137
+  3 years    18.25%  2019-06 to 2022-05    -0.54%  2022-05 to 2025-04     5.71%   96% of 113
+  5 years    11.73%  2017-04 to 2022-03     0.47%  2015-02 to 2020-01     7.87%  100% of 89
+```
+
+### Underwater
+
+"Underwater" means below a previous high: the months an investor spent
+waiting to get back to even. `gtaa backtest --top 6 --underwater` reports
+the share of months spent underwater, the longest stretch from a high to
+its recovery, the current position, and the five deepest drawdowns with
+how long each took to reach bottom and then to recover:
+
+```
+Underwater (months spent below the previous equity high):
+Strategy
+  Time underwater             70% of months
+  Longest stretch              32 months (2021-12 to 2024-08)
+  Now                      -0.47% below the high
+  Largest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover
+    2021-12  2023-09  2024-08     -12.33%      21 mo       11 mo
+    2015-01  2016-01  2017-02     -10.89%      12 mo       13 mo
+    2018-08  2019-05  2020-08      -9.85%       9 mo       15 mo
+    2024-11  2024-12  2025-06      -5.92%       1 mo        6 mo
+    2018-01  2018-04  2018-08      -4.27%       3 mo        4 mo
+Equal-weight
+  Time underwater             63% of months
+  Longest stretch              31 months (2021-12 to 2024-07)
+  Now                       0.00% below the high
+  Largest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover
+    2021-12  2022-09  2024-07     -19.68%       9 mo       22 mo
+    2019-12  2020-03  2020-07     -14.52%       3 mo        4 mo
+    2014-08  2016-01  2016-06      -9.02%      17 mo        5 mo
+    2018-01  2018-12  2019-03      -8.13%      11 mo        3 mo
+    2024-11  2024-12  2025-05      -4.08%       1 mo        5 mo
+```
+
+AGG 3:
+
+```
+Underwater (months spent below the previous equity high):
+Strategy
+  Time underwater             76% of months
+  Longest stretch              32 months (2015-01 to 2017-09)
+  Now                      -3.97% below the high
+  Largest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover
+    2022-05  2023-10  2024-11     -15.20%      17 mo       13 mo
+    2018-08  2019-05  2020-08     -15.06%       9 mo       15 mo
+    2015-01  2016-01  2017-09     -15.00%      12 mo       20 mo
+    2026-02  2026-03  -            -8.88%       1 mo           -
+    2024-11  2024-12  2025-06      -6.45%       1 mo        6 mo
+```
+
+Two things stand out. Neither AGG 6 nor equal-weight has a losing 3- or
+5-year window in this sample (AGG 3 has one, barely: -0.54% a year over
+2022–25), so the sample simply does not contain a long bad stretch for a
+diversified portfolio; the extended backtest does. And the strategy spends *more* time underwater than
+equal-weight (70% of months against 63%) despite shallower drawdowns: it
+gives up ground slowly in choppy markets (2015, 2018, 2023) and takes a
+year or more to climb back, while equal-weight's drawdowns are sharper but
+recover with the market.
+
+## Extended backtest (2000 to present)
+
+The [`extended/`](extended/) directory runs the same engine from
+**August 2000**, through the 2000–02 and 2008 bear markets, by splicing a
+mutual fund in front of each ETF for the years before the ETF existed. Its
+[README](extended/README.md) lists every proxy fund, the date it hands over
+to the ETF, and why it was chosen.
+
+**Those results should be seen as less reliable than the 2014 ones.** For
+most sleeves the proxy is the same Vanguard fund in an older share class,
+but three have no faithful substitute: momentum is the plain S&P 500 before
+2013, gold is a gold-mining stock fund before 2004, and commodities are a
+GSCI-tracking fund before 2006. The proxies also carried higher fees than
+today's ETFs. Over 2000–2026 AGG 6 shows a CAGR of 10.23% with a maximum
+drawdown of 12.78%, against 7.76% and 34.47% for equal-weight; a large
+part of the difference is 2008 alone (-1.7% against -20.5%). Read the caveats in that README
+before quoting the numbers.
+
 ## How it works
 
 ```mermaid
@@ -229,7 +337,7 @@ Files:
 | `gtaa/data.py` | Tiingo client and the DuckDB `prices` table |
 | `gtaa/signals.py` | the SQL query, selection rule, current allocation |
 | `gtaa/backtest.py` | the monthly engine and its benchmark |
-| `gtaa/metrics.py` | CAGR, volatility, Sharpe, drawdown, calendar years |
+| `gtaa/metrics.py` | CAGR, volatility, Sharpe, calendar years, rolling windows, drawdown episodes |
 | `gtaa/cli.py` | the `gtaa` command |
 | `tests/` | the rules and the engine, checked on hand-built price paths |
 | `extended/` | the 2000–present backtest on spliced mutual-fund history, with its own README |
@@ -249,9 +357,10 @@ gtaa update                     # fetch full history for all 14 ETFs (~30 s)
 gtaa signal --top 6             # this month's allocation
 gtaa signal --top 3 --all       # AGG 3, with the full ranking
 gtaa backtest --top 6 --years   # backtest with calendar-year table
+gtaa backtest --top 6 --rolling --underwater   # rolling windows, drawdowns
 gtaa backtest --top 6 --csv equity.csv
 gtaa coverage                   # what history is stored
-pytest                          # 17 tests, no network
+pytest                          # 22 tests, no network
 ```
 
 The database is `gtaa.duckdb` in the working directory (override with
@@ -292,7 +401,8 @@ where a choice had to be made:
 by hand: a series that doubles every month (so each k-month return is
 2ᵏ − 1), assets that collapse below their average, top-N with a trending
 asset left out, a gap in history, a partial trailing month, a backtest
-whose every monthly return is known in advance, and the fund-to-ETF splice
+whose every monthly return is known in advance, rolling windows and
+drawdown episodes on short hand-built series, and the fund-to-ETF splice
 used by `extended/`. None of them touch the network.
 
 ## References

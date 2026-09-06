@@ -13,6 +13,9 @@ kind of thing altogether (see the notes under the table). The 2014 backtest
 answers "what would this portfolio of ETFs have done"; this one answers
 "what would the rules have done on the closest tradable funds that existed".
 
+The rules themselves are unchanged from the main backtest and come from
+Faber's [*A Quantitative Approach to Tactical Asset Allocation*](https://mebfaber.com/wp-content/uploads/2016/05/SSRN-id962461.pdf).
+
 ```bash
 python extended/build.py                         # ~1 min, writes extended.duckdb
 gtaa --db extended.duckdb backtest --top 6 --years
@@ -204,12 +207,101 @@ Calendar years:
   2026      9.59%         11.81%  (to Aug)
 ```
 
+### Rolling periods
+
+The full-period CAGR hides how different the experience was depending on
+when you started. `gtaa --db extended.duckdb backtest --top 6 --rolling` looks at every 1-,
+3- and 5-year window of consecutive months and reports the best and worst
+(annualised, with the months they cover), the median, and how many windows
+were positive:
+
+```
+Rolling returns (annualised, every window of consecutive months):
+Strategy
+  window       best  (period)               worst  (period)              median  positive
+  1 year     39.03%  2020-11 to 2021-10   -10.89%  2015-02 to 2016-01    11.81%   82% of 301
+  3 years    21.67%  2003-05 to 2006-04     0.88%  2021-05 to 2024-04     9.77%  100% of 277
+  5 years    18.52%  2002-11 to 2007-10     3.21%  2015-04 to 2020-03     9.43%  100% of 253
+Equal-weight
+  window       best  (period)               worst  (period)              median  positive
+  1 year     41.99%  2009-03 to 2010-02   -32.05%  2008-03 to 2009-02     8.67%   82% of 301
+  3 years    22.71%  2009-03 to 2012-02    -6.27%  2006-03 to 2009-02     7.06%   97% of 277
+  5 years    17.38%  2002-11 to 2007-10     1.05%  2004-03 to 2009-02     6.30%  100% of 253
+```
+
+AGG 3 (the equal-weight rows are the same as above):
+
+```
+Rolling returns (annualised, every window of consecutive months):
+Strategy
+  window       best  (period)               worst  (period)              median  positive
+  1 year     47.36%  2003-04 to 2004-03   -15.00%  2015-02 to 2016-01    11.08%   78% of 301
+  3 years    25.73%  2003-05 to 2006-04    -0.54%  2022-05 to 2025-04     9.27%   99% of 277
+  5 years    23.39%  2003-04 to 2008-03     0.47%  2015-02 to 2020-01     8.83%  100% of 253
+```
+
+### Underwater
+
+"Underwater" means below a previous high: the months an investor spent
+waiting to get back to even. `gtaa --db extended.duckdb backtest --top 6 --underwater` reports
+the share of months spent underwater, the longest stretch from a high to
+its recovery, the current position, and the five deepest drawdowns with
+how long each took to reach bottom and then to recover:
+
+```
+Underwater (months spent below the previous equity high):
+Strategy
+  Time underwater             65% of months
+  Longest stretch              32 months (2021-12 to 2024-08)
+  Now                      -0.47% below the high
+  Largest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover
+    2008-02  2008-10  2009-09     -12.78%       8 mo       11 mo
+    2021-12  2023-09  2024-08     -12.33%      21 mo       11 mo
+    2015-01  2016-01  2017-02     -10.89%      12 mo       13 mo
+    2018-08  2019-05  2020-08      -9.85%       9 mo       15 mo
+    2004-03  2004-04  2004-11      -9.75%       1 mo        7 mo
+Equal-weight
+  Time underwater             63% of months
+  Longest stretch              31 months (2021-12 to 2024-07)
+  Now                       0.00% below the high
+  Largest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover
+    2008-05  2009-02  2010-09     -34.47%       9 mo       19 mo
+    2021-12  2022-09  2024-07     -19.68%       9 mo       22 mo
+    2019-12  2020-03  2020-07     -14.52%       3 mo        4 mo
+    2011-04  2011-09  2012-01     -10.41%       5 mo        4 mo
+    2002-05  2002-09  2003-05      -9.26%       4 mo        8 mo
+```
+
+AGG 3:
+
+```
+Underwater (months spent below the previous equity high):
+Strategy
+  Time underwater             71% of months
+  Longest stretch              32 months (2015-01 to 2017-09)
+  Now                      -3.97% below the high
+  Largest drawdowns:
+    peak     trough   recovered     depth  to trough  to recover
+    2010-04  2010-08  2011-02     -15.59%       4 mo        6 mo
+    2022-05  2023-10  2024-11     -15.20%      17 mo       13 mo
+    2018-08  2019-05  2020-08     -15.06%       9 mo       15 mo
+    2015-01  2016-01  2017-09     -15.00%      12 mo       20 mo
+    2008-06  2008-10  2009-09     -13.82%       4 mo       11 mo
+```
+
 What the longer sample adds to the picture from 2014:
 
 - **The difference is made in the two bear markets.** Equal-weight
   lost a third of its value in 2008; AGG 6 was down 1.7% for the year and
   AGG 3 was up. The strategy's worst drawdown over 26 years (−12.8%) is
   smaller than equal-weight's drawdown in 2008 alone.
+- **The worst stretches are recent, not in 2008.** The strategy's worst
+  1-, 3- and 5-year windows all fall in 2015–2024, inside the ETF period;
+  2008 produced its deepest drawdown (12.8%) but it was recovered within
+  eleven months. Equal-weight's worst 1-, 3- and 5-year windows all end
+  in February 2009: a 32% loss over one year, and a negative 3-year return.
 - **The rules lag in strong, broad rallies** (2004–05, 2009–10, 2019, 2023),
   which is the cost of being partly in cash and concentrated in last year's
   leaders. Over the full period that cost was more than repaid, but there

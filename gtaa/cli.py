@@ -13,7 +13,7 @@ import sys
 
 import pandas as pd
 
-from . import data
+from . import data, metrics
 from .backtest import run_backtest
 from .signals import allocation, compute_signals
 from .universe import ALL_SYMBOLS, CASH, asset
@@ -75,11 +75,10 @@ def cmd_backtest(args):
     print(f"  {'Average cash weight':22s}{s['avg_cash_weight']:>9.1%}")
     print()
     block(f"Equal-weight (all {n} held at once, 1/{n} each, rebalanced monthly)", s["equal_weight"])
+    bench_rets = result.benchmark.pct_change().dropna()
     if args.years:
-        from .metrics import calendar_year_returns
-        yrs = calendar_year_returns(result.returns)
-        bench = (1.0 + result.benchmark.pct_change().dropna()).groupby(
-            result.benchmark.index[1:].year).prod() - 1.0
+        yrs = metrics.calendar_year_returns(result.returns)
+        bench = metrics.calendar_year_returns(bench_rets)
         first_month, last_month = result.returns.index[0], result.returns.index[-1]
         print(f"\nCalendar years:\n  {'':6s}{'strategy':>9s}   {'equal-weight':>12s}")
         for year, r in yrs.items():
@@ -89,6 +88,32 @@ def cmd_backtest(args):
             elif year == first_month.year and first_month.month != 1:
                 partial = "  (from %s)" % first_month.strftime("%b")
             print(f"  {year}  {r:>9.2%}   {bench.get(year, float('nan')):>12.2%}{partial}")
+    if args.rolling:
+        print("\nRolling returns (annualised, every window of consecutive months):")
+        for title, rets in (("Strategy", result.returns), ("Equal-weight", bench_rets)):
+            print(f"{title}\n  {'window':9s}{'best':>8s}  {'(period)':18s}  {'worst':>8s}  {'(period)':18s}  {'median':>8s}  {'positive':>8s}")
+            for w in metrics.rolling_summary(rets):
+                years = w["months"] // 12
+                print(f"  {years} year{'s' if years > 1 else ' '}  "
+                      f"{w['best']:>8.2%}  {w['best_span'][0]} to {w['best_span'][1]}  "
+                      f"{w['worst']:>8.2%}  {w['worst_span'][0]} to {w['worst_span'][1]}  "
+                      f"{w['median']:>8.2%}  {w['positive']:>4.0%} of {w['windows']}")
+    if args.underwater:
+        print("\nUnderwater (months spent below the previous equity high):")
+        for title, rets in (("Strategy", result.returns), ("Equal-weight", bench_rets)):
+            u = metrics.underwater_summary(rets)
+            dd = metrics.drawdowns(rets).head(5)
+            start, end = u["longest_span"]
+            end = "not yet recovered" if pd.isna(end) else end.strftime("%Y-%m")
+            print(f"{title}")
+            print(f"  {'Time underwater':22s}{u['time_underwater']:>9.0%} of months")
+            print(f"  {'Longest stretch':22s}{u['longest_months']:>9d} months ({start:%Y-%m} to {end})")
+            print(f"  {'Now':22s}{u['current']:>9.2%} below the high")
+            print(f"  Largest drawdowns:\n    {'peak':9s}{'trough':9s}{'recovered':11s}{'depth':>8s}{'to trough':>11s}{'to recover':>12s}")
+            for d in dd.itertuples(index=False):
+                rec = "-" if pd.isna(d.recovery) else d.recovery.strftime("%Y-%m")
+                back = "-" if pd.isna(d.months_to_recover) else f"{int(d.months_to_recover)} mo"
+                print(f"    {d.peak:%Y-%m}  {d.trough:%Y-%m}  {rec:9s}  {d.depth:>8.2%}{d.months_to_trough:>8d} mo{back:>12s}")
     if args.csv:
         out = pd.DataFrame({"equity": result.equity, "equal_weight": result.benchmark})
         out.to_csv(args.csv, index_label="month_end")
@@ -118,6 +143,8 @@ def main(argv=None):
     b.add_argument("--start", default=None, help="YYYY-MM-DD")
     b.add_argument("--end", default=None, help="YYYY-MM-DD")
     b.add_argument("--years", action="store_true", help="print calendar-year returns")
+    b.add_argument("--rolling", action="store_true", help="print rolling 1/3/5-year returns")
+    b.add_argument("--underwater", action="store_true", help="print time underwater and the largest drawdowns")
     b.add_argument("--csv", default=None, help="write equity curves to this file")
     b.set_defaults(fn=cmd_backtest)
 
